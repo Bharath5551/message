@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creative Chat</title>
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            justify-content: center;
+        }
+        #chat-container {
+            width: 90%;
+            max-width: 500px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+        }
+        #chat-box {
+            height: 300px;
+            overflow-y: auto;
+            border-bottom: 2px solid white;
+            padding: 10px;
+            background: rgba(0,0,0);
+        }
+        #message {
+            width: 75%;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+        }
+        #sendBtn {
+            padding: 10px;
+            background: #ff9800;
+            border: none;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .message {
+            padding: 5px;
+            margin: 5px 0;
+            border-radius: 5px;
+        }
+        .user-message {text-align: right; }
+        .other-message { text-align: left; }
+        #users-box {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="chat-container">
+        <h2>Creative Chat</h2>
+        <div id="chat-box"></div>
+        <input type="text" id="message" placeholder="Type a message...">
+        <button id="sendBtn" onclick="sendMessage()">Send</button>
+        <div id="users-box">
+            <h3>Online Users</h3>
+            <ul id="users-list"></ul>
+        </div>
+    </div>
+
+    <script>
+        const socket = io("http://172.20.10.7:3000");
+        let username = prompt("Enter your name:");
+        while (!username) username = prompt("Enter your name:");
+        socket.emit("set username", username);
+
+        function sendMessage() {
+            const input = document.getElementById("message");
+            const message = input.value.trim();
+            if (message) {
+                socket.emit("chat message", { username, message });
+                input.value = "";
+            }
+        }
+
+        socket.on("chat message", (data) => {
+            const chatBox = document.getElementById("chat-box");
+            const msgDiv = document.createElement("div");
+            msgDiv.className = "message " + (data.username === username ? "user-message" : "other-message");
+            msgDiv.innerHTML = `<strong>${data.username}:</strong> ${data.message}`;
+            chatBox.appendChild(msgDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        });
+
+        socket.on("user update", (users) => {
+            const usersList = document.getElementById("users-list");
+            usersList.innerHTML = users.map((user, index) => `<li>${index + 1}. ${user}</li>`).join(" ");
+        });
+    </script>
+</body>
+</html>
