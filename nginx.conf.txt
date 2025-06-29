@@ -1,0 +1,15 @@
+worker_processes 2;
+events {
+    worker_connections 1024;
+}
+http {
+    server {
+        listen 80;
+        location / {
+            proxy_pass http://localhost:3000; # Change 3000 to your app port
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        }
+    }
+}
